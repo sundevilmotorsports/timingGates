@@ -1,13 +1,30 @@
 #include <Arduino.h>
+#include <TimeLib.h>
+
+time_t RTCTime;
 
 #define HWSERIAL Serial1
 #define CENTIMETERS 1000
 #define TIMEOUT 3000
 
+int starting_micro = 0;
+int starting_time = 0;
+
+time_t getTeensy3Time() {
+  return Teensy3Clock.get();
+}
+
 void setup() {
   Serial.begin(9600);
   HWSERIAL.begin(115200);
+  setSyncProvider(getTeensy3Time);
+  Serial.println("\n" __FILE__ " " __DATE__ " " __TIME__);
+  int start_sec = second();
+  while(start_sec == second());
+  starting_micro = micros();
+  starting_time = now();
 }
+
 
 void getTFminiData(int* distance, int* strength) {
   static char i = 0;
@@ -48,6 +65,6 @@ void loop() {
   } else if (TIMEOUT && millis() - start > TIMEOUT){
     waiting = false;
   }
-  
+  Serial.println("Current: " + String(month()) +"/" + String(day()) + "/" + String(year()) + "\t" + String(hour()) + ":" + String(minute()) + ":" + String(second()) + "\tSeconds Since 1970: " + String(now()) + "\tMicros: " + String(micros()) + "\tStarting Seconds: " + String(starting_time) + "\tStarting micro: " + String(starting_micro));
   Serial.println(String(distance) + "cm\tstrength: " + String(strength) + "\tstart: " + String(start));
 }
