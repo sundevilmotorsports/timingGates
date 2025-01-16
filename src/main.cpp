@@ -79,22 +79,38 @@ int strength = 0;
 int start = 0;
 bool waiting = false;
 
-uint8_t general[8];
+uint8_t general[13];
 
 void loop() {
+  bool sent;
   getTFminiData(&distance, &strength);
   if(!waiting && distance < CENTIMETERS){
     start = millis();
     waiting = true;
     Serial.println(String(distance) + "cm\tstrength: " + String(strength) + "\tstart: " + String(start));
     bool sent = false;
+    general[0] = (uint8_t) 4;
+    general[1] = (uint8_t) 0; //0
+    general[2] = (start >> 24) & 0xff;
+    general[3] = (start >> 16) & 0xff;
+    general[4] = (start >> 8) & 0xff;
+    general[5] = start & 0xff; 
+    general[6] = (distance >> 24) & 0xff;
+    general[7] = (distance >> 16) & 0xff;
+    general[8] = (distance >> 8) & 0xff;
+    general[9] = distance & 0xff; 
+    general[10] = (strength >> 24) & 0xff;
+    general[11] = (strength >> 16) & 0xff;
+    general[12] = (strength >> 8) & 0xff;
+    general[13] = strength & 0xff; 
+
     if(radio){
       sent = driver.send(general, sizeof(general));
     }
-    Serial.println("Sent radio 1: " + String(sent) + "\t micros: " + String(micros()) + "\tstarting delta: " + String(micros()-starting_micro));
   } else if (waiting && millis() - start > TIMEOUT){
     waiting = false;
     Serial.println("ended timeout");
     // Serial.println("Current: " + String(month()) +"/" + String(day()) + "/" + String(year()) + "\t" + String(hour()) + ":" + String(minute()) + ":" + String(second()) + "\tSeconds Since 1970: " + String(now()) + "\tMicros: " + String(micros()) + "\tStarting Seconds: " + String(starting_time) + "\tStarting micro: " + String(starting_micro));
   }
+  Serial.println("Sent radio 1: " + String(sent) + "\t micros: " + String(micros()) + "\tstarting delta: " + String(micros()-starting_micro) + "\tdistance: " +  String(distance) + "cm");  
 }
